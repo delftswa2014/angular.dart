@@ -832,3 +832,44 @@ class ContentEditable extends InputTextLike {
     (inputElement as dynamic).innerHtml = (value == null) ? '' : value;
   }
 }
+
+/**
+ * Creates a two-way databinding between the `ng-model` expression
+ * and the `<input>` file-based input elements.  `Selector: input[type=file][ng-model]`
+ *
+ * **Usage**
+ *
+ *     <input type="text|url|password|email|search|tel|color" ng-model="myModel">
+ *     <input type="file" [multiple] ng-model="handler(files)">
+ *
+ * When the `ng-model` attribute is present on the input element,
+ * and the value of the input element changes, the matching model property on the scope
+ * is updated. Likewise, if the value of the model property changes on the scope,
+ * the value of the input element is updated.
+ *
+ */
+@Decorator(
+    selector: 'input[type=file][ng-model]',
+    map: const {'ng-model': '&filesSelected'})
+    
+class InputFile {
+  dom.Element inputElement;
+  String expression;
+  final Scope scope;
+  String _inputType;
+  List<dom.File> files;
+  var listeners = {};
+
+  InputFile(dom.Element this.inputElement, this.scope) {
+  }
+
+  initListener(var stream, var handler) {
+    int key = stream.hashCode;
+    if (!listeners.containsKey(key)) {
+      listeners[key] = handler;
+      stream.listen((event) => handler({r"files": (inputElement as dom.InputElement).files}));
+    }
+  }
+
+  set filesSelected(value)  =>  initListener(inputElement.onChange, value);
+}
